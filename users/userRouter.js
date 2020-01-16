@@ -1,13 +1,26 @@
 const express = require('express');
 
+const userDb = require("./userDb");
+
+const postDb = require("../posts/postDb.js")
+
 const router = express.Router();
 
-router.post('/', (req, res) => {
-  // do your magic!
+
+const logger = require("../middlewares/logger");
+
+router.use(express.json())
+
+
+
+
+router.post('/',logger, (req, res) => {
+ 
 });
 
-router.post('/:id/posts', (req, res) => {
+router.post('/:id/posts',logger, (req, res) => {
   // do your magic!
+
 });
 
 router.get('/', (req, res) => {
