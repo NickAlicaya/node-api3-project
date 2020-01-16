@@ -1,11 +1,12 @@
 const express = require('express');
 
-const postDb = require("./postDb.js");
+const postDb = require("./postDb.js");// make sure in between
 
 const router = express.Router();
 
 
-router.get('/', (req, res) => {
+
+router.get('/',  (req, res) => {
   postDb.get()
   .then(posts => {
     res.status(200).json(posts)
@@ -17,7 +18,7 @@ router.get('/', (req, res) => {
 });
 
 
-router.get('/:id', (req, res) => {
+router.get('/:id',validatePostId, (req, res) => {
    postDb.getById(req.params.id)
   .then(posts => {
     res.status(200).json(posts)
@@ -29,7 +30,7 @@ router.get('/:id', (req, res) => {
 });
 
 
-router.delete('/:id', (req, res) => {
+router.delete('/:id',validatePostId, (req, res) => {
   postDb.remove(req.params.id)
   .then(posts => {
     res.status(200).json({alert:"Post was successfully deleted."})
@@ -41,7 +42,7 @@ router.delete('/:id', (req, res) => {
 });
 
 
-router.put('/:id', (req, res) => {
+router.put('/:id',validatePostId,validatePost, (req, res) => {
 
   postDb.update(req.params.id, req.body)
   .then(post => {
@@ -56,7 +57,31 @@ router.put('/:id', (req, res) => {
 // custom middleware
 
 function validatePostId(req, res, next) {
-  // do your magic!
+ postDb.getById(req.params.id)
+ .then(post => {
+   if (post) {
+     req.post=post;
+     next();
+   }
+   else {
+     res.status(400).json({error: "No post with this id found"})
+   }
+ })
 }
+
+
+function validatePost(req, res, next) {
+
+  if (req.body) {
+    if (req.body.text) {
+      next();
+    } else {
+      res.status(400).json({ message: "Missing required text field" });
+    }
+  } else {
+    res.status(400).json({ message: "Missing post data" });
+  }
+}
+
 
 module.exports = router;
