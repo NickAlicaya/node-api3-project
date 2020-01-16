@@ -10,34 +10,20 @@ const router = express.Router();
 // const logger = require("../middlewares/logger");
 
 
+//Adds New user
+router.post('/',validateUser,(req, res) => {
 
-router.post('/', (req, res) => {
-  userDb.insert(req.body.user)
+  const {name} = req.body;
+  userDb.insert({name})
   .then(user => {
-    res.json(user)
+    res.status(201).json(user)
   })
   .catch(err => {
     res.status(404).json({error: "Error creating user."})
   })
 });
 
-// function insert(user) {
-//   return db('users')
-//     .insert(user)
-//     .then(ids => {
-//       return getById(ids[0]);
-//     });
-// }
-
-
-// function insert(user) {
-//   return db('users')
-//     .insert(user)
-//     .then(ids => {
-//       return getById(ids[0]);
-//     });
-// }
-
+//Add new user post***
 router.post('/:id/posts', (req, res) => {
   const post = req.body;
 
@@ -47,7 +33,7 @@ router.post('/:id/posts', (req, res) => {
   })
    .catch(err => {
      res.status(500).json({error: "Cannot add post."})
-   })
+   });
 });
 
 router.get('/', (req, res) => {
@@ -60,7 +46,8 @@ router.get('/', (req, res) => {
   })
 });
 
-router.get('/:id', (req, res) => {
+// get single user with id
+router.get('/:id',validateUserId, (req, res) => {
   userDb.getById(req.params.id)
   .then(user => {
     res.status(200).json(user)
@@ -71,18 +58,26 @@ router.get('/:id', (req, res) => {
   })
 });
 
-router.get('/:id/posts', (req, res) => {
-  // do your magic!
+router.get('/:id/posts',validateUserId, (req, res) => {
+const {id} = req.params
+
+  userDb.getUserPosts(id)
+  .then(posts => {
+    res.status(200).json(posts)
+  })
+  .catch(err => {
+    res.status(500).json({error: "Error getting posts from this id"})
+  })
 });
 
-router.delete('/:id', (req, res) => {
+router.delete('/:id',validateUserId, (req, res) => {
  userDb.remove(req.params.id)
  .then(user => {
    res.status(200).json({alert: "User has been deleted."});
  })
 });
 
-router.put('/:id', (req, res) => {
+router.put('/:id',validateUserId, (req, res) => {
   const {id} =req.params
   const {name}= req.body
   userDb.update(id, {name})
@@ -102,19 +97,6 @@ router.put('/:id', (req, res) => {
 
 //custom middlewares
 
-// function validateUserId(req, res, next) {
-//   userDb.getById(req.params.id)
-//   .then(user => {
-//     if (user) {
-//       req.user=user;
-//       next();
-//     }
-//     else {
-//       res.status(400).json({error: "No user with this id found"})
-//     }
-//   })
-//  }
-
 function validateUserId(req, res, next) {
   userDb.getById(req.params.id)
   .then(user => {
@@ -130,19 +112,17 @@ function validateUserId(req, res, next) {
  
 
 function validateUser(req, res, next) {
-    if (req.body) {
-    if (req.body.name) {
-      next();
-    }
-    else {
-      res.status(400).json({ message: "Name field required." })
-    }
+  const { name } = req.body;
+  if (!name) {
+    res.status(400).json({ error: "Name required" });
+  } else if (typeof name !== "string") {
+    res.status(400).json({ error: "Name entered is invalid" });
   } else {
-    res.status(400).json({ message: "Missing user data" })
+    next();
   }
 }
+  
 
- 
 
 function validatePost(req, res, next) {
    if (req.body) {
